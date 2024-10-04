@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDG 11 Quiz - Sustainable Cities and Communities</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #80deea);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1, h2 {
+            margin-bottom: 20px;
+            color: #00796b;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: #004d40;
+        }
+
+        button {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: #004d40;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .page {
+            display: block;
+        }
+
+        #quiz-page {
+            text-align: left;
+        }
+
+        #choices button {
+            display: block;
+            background-color: #b2dfdb;
+            color: #004d40;
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            border-radius: 5px;
+            border: 4px solid transparent;
+            background-size: 200%;
+            animation: borderAnimation 2s infinite alternate;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        #choices button:hover {
+            background-color: #80cbc4;
+            color: #004d40;
+            transform: translateY(-2px);
+        }
+
+        /* Animation for border color */
+        @keyframes borderAnimation {
+            0% {
+                border-image: linear-gradient(45deg, #00796b, #004d40);
+            }
+            100% {
+                border-image: linear-gradient(45deg, #004d40, #00796b);
+            }
+            border-image-slice: 1;
+        }
+
+        /* Animation classes for feedback */
+        .correct-answer {
+            background-color: #66bb6a !important;
+            animation: correctAnimation 0.5s ease-in-out;
+        }
+
+        .incorrect-answer {
+            background-color: #ef5350 !important;
+            animation: incorrectAnimation 0.5s ease-in-out;
+        }
+
+        @keyframes correctAnimation {
+            0% { background-color: #00796b; }
+            100% { background-color: #66bb6a; }
+        }
+
+        @keyframes incorrectAnimation {
+            0% { background-color: #e53935; }
+            100% { background-color: #ef5350; }
+        }
+
+        /* Scoreboard */
+        #scoreboard {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: #00796b;
+            font-size: 18px;
+        }
+
+        /* Fun animations for end of quiz */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: popIn 1s ease-in-out;
+        }
+
+        /* Result Page Styles */
+        #result-page {
+            background: #e0f7fa;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+        }
+
+        #result-page h1 {
+            color: #00796b;
+        }
+
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #004d40;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="scoreboard" class="hidden">Score: 0/0</div>
+
+        <div id="start-page" class="page">
+            <h1>Welcome to the SDG 11 Quiz</h1>
+            <p>How much do you know about creating sustainable cities and communities?</p>
+            <p>Instructions Answere The Question On The Topic OF SDG:11 Sustainable Cities, When The Quiz Ends Click Start Quiz</p>
+            <button id="start-btn">Start Quiz</button>
+        </div>
+
+        <div id="quiz-page" class="page hidden">
+            <h2 id="question"></h2>
+            <div id="choices"></div>
+            <button id="next-btn" class="hidden">Next</button>
+        </div>
+
+        <div id="result-page" class="page hidden">
+            <h1 class="hidden">Quiz Completed!</h1>
+            <p id="score" class="animate-pop" ></p>
+            <button id="restart-btn" class="animate-pop hidden">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+
+        const startBtn = document.getElementById('start-btn');
+        const quizPage = document.getElementById('quiz-page');
+        const startPage = document.getElementById('start-page');
+        const resultPage = document.getElementById('result-page');
+        const nextBtn = document.getElementById('next-btn');
+        const questionEl = document.getElementById('question');
+        const choicesEl = document.getElementById('choices');
+        const scoreEl = document.getElementById('score');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreboardEl = document.getElementById('scoreboard');
+
+        // Quiz data
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let totalQuestions = 0;
+
+        const questions = [
+            {
+                question: "What does SDG 11 aim to achieve?",
+                choices: ["Sustainable Cities and Communities", "Zero Hunger", "Quality Education", "Climate Action"],
+                correct: 0
+            },
+            {
+                question: "What is a major benefit of green spaces in cities?",
+                choices: ["Increases pollution", "Increases noise levels", "Decreases biodiversity", "Improves mental health"],
+                correct: 3
+            },
+            {
+                question: "Which of the following is NOT a characteristic of a sustainable city?",
+                choices: ["Efficient public transport", "High levels of air pollution", "Affordable housing", "Walkable neighborhoods"],
+                correct: 1
+            },
+            {
+                question: "Which global initiative focuses on making cities inclusive and sustainable?",
+                choices: ["World Wildlife Fund", "Global Forest Watch", "United Nations Habitat", "Greenpeace"],
+                correct: 2
+            },
+            {
+                question: "What percentage of the world's population is expected to live in urban areas by 2050?",
+                choices: ["50%", "65%", "75%", "85%"],
+                correct: 1
+            },
+            {
+                question: "Which of the following is a key component of sustainable urban planning?",
+                choices: ["Urban sprawl", "Highways", "Mixed-use development", "Rural development"],
+                correct: 2
+            },
+            {
+                question: "What is one way cities can reduce their carbon footprint?",
+                choices: ["Encouraging car use", "Expanding parking lots", "Increasing industrial activities", "Expanding parking lotsPromoting public transportation"],
+                correct: 3
+            },
+            {
+                question: "What is an important aspect of sustainable housing?",
+                choices: ["Use of renewable energy", "High energy consumption", "Limited water usage", "Single-use materials"],
+                correct: 0
+            }
+        ];
+
+        // Shuffle questions
+        function shuffleQuestions(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Start quiz function
+        function startQuiz() {
+            // Reset variables and shuffle questions
+            currentQuestionIndex = 0;
+            score = 0;
+            totalQuestions = questions.length;
+            shuffleQuestions(questions);
+            scoreboardEl.classList.remove('hidden');
+            startPage.classList.add('hidden');
+            quizPage.classList.remove('hidden');
+            scoreboardEl.textContent = `Score: ${score}/${totalQuestions}`;
+            nextQuestion();
+        }
+
+        // Show next question
+        function nextQuestion() {
+            resetChoices();
+            const currentQuestion = questions[currentQuestionIndex];
+            questionEl.textContent = currentQuestion.question;
+            currentQuestion.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.textContent = choice;
+                button.addEventListener('click', () => selectAnswer(index));
+                choicesEl.appendChild(button);
+            });
+        }
+
+        // Reset choices for the next question
+        function resetChoices() {
+            choicesEl.innerHTML = '';
+            nextBtn.classList.add('hidden');
+        }
+
+        // Handle answer selection
+        function selectAnswer(choiceIndex) {
+            const buttons = choicesEl.querySelectorAll('button');
+            if (choiceIndex === questions[currentQuestionIndex].correct) {
+                score++;
+                buttons[choiceIndex].classList.add('correct-answer');
+            } else {
+                buttons[choiceIndex].classList.add('incorrect-answer');
+                buttons[questions[currentQuestionIndex].correct].classList.add('correct-answer');
+            }
+
+            // Update scoreboard
+            scoreboardEl.textContent = `Score: ${score}/${totalQuestions}`;
+            nextBtn.classList.remove('hidden');
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                showResults();
+            }
+        }
+
+        // Show the final score with animations
+        function showResults() {
+            quizPage.classList.add('hidden');
+            resultPage.classList.remove('hidden');
+            scoreboardEl.classList.add('hidden');
+            scoreEl.textContent = `You scored ${score} out of ${totalQuestions}!`;
+            scoreEl.classList.add('animate-pop'); // Add animation class
+            restartBtn.classList.remove('hidden'); // Show the restart button
+        }
+
+        // Restart the quiz
+        function restartQuiz() {
+            resultPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+            restartBtn.classList.add('hidden'); // Hide restart button after restarting
+            scoreboardEl.textContent = `Score: 0/0`;
+            scoreboardEl.classList.remove('hidden');
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', nextQuestion);
+        restartBtn.addEventListener('click', restartQuiz);
+    </script>
+</body>
+</html>
